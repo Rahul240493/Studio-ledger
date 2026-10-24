@@ -1,6 +1,5 @@
 "use client";
 import { useId, useMemo, useState } from "react";
-import { upload } from "@vercel/blob/client";
 import { SEGMENTS, EXPENSE_CATS, INCOME_CATS, MODES } from "@/lib/config";
 import { api, rs, rsx, rsShort, r2, num, ym, today, fmtDate, monthLabel, shiftMonth, segOf } from "./util";
 import { Modal, Field, Select, Thinking, Confirm, useToast, useSpeech } from "./ui";
@@ -152,6 +151,21 @@ export function EntryCard({ d, onChange, onRemove, projects }) {
 }
 
 /* ---------------- Log ---------------- */
+// Phone photos are often 4–10 MB. Shrink them to a clear JPEG under ~1.5 MB before upload.
+async function shrinkImage(file) {
+  if (!file.type.startsWith("image/") || (file.size < 1.5e6 && file.type === "image/jpeg")) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 2200 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.85));
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch { return file; }
+}
+
 export function LogView({ data, reload }) {
   const toast = useToast();
   const [text, setText] = useState("");
@@ -167,8 +181,13 @@ export function LogView({ data, reload }) {
     try {
       let f = null;
       if (file) {
-        const b = await upload(`invoices/${today()}-${file.name}`, file, { access: "private", handleUploadUrl: "/api/blob-upload", contentType: file.type || undefined });
-        f = { pathname: b.pathname, contentType: file.type || b.contentType };
+        const fd = new FormData();
+        const ready = await shrinkImage(file);
+        fd.append("file", ready, ready.name || file.name);
+        const res = await fetch("/api/invoice-upload", { method: "POST", body: fd });
+        const up = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(up.error || "Couldn't upload the invoice.");
+        f = up;
         setBusy("Reading the invoice…");
       }
       const { entries } = await api("/api/parse", { method: "POST", body: { text, file: f } });
@@ -197,7 +216,7 @@ export function LogView({ data, reload }) {
           {speech.supported && <button className={`btn${speech.listening ? " live" : ""}`} onClick={() => (speech.listening ? speech.stop() : speech.start(text))}>{speech.listening ? "● Stop" : "Speak"}</button>}
           <button className="btn primary" onClick={read} disabled={!!busy}>Read it</button>
           <label className="btn" htmlFor="invoiceFile">Attach invoice</label>
-          <input type="file" id="invoiceFile" accept="image/*,application/pdf" hidden onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; if (f.size > 20 * 1024 * 1024) { toast("That file is over 20 MB."); return; } setFile(f); setErr(""); }} />
+          <input type="file" id="invoiceFile" accept="image/*,application/pdf" hidden onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (!f) return; if (f.type === "application/pdf" && f.size > 4 * 1024 * 1024) { toast("That PDF is over 4 MB. Try a photo of it instead."); return; } setFile(f); setErr(""); }} />
           <button className="btn ghost" onClick={() => setDrafts((d) => [...d, blankEntry({}, { note: "" })])}>Type it in</button>
         </div>
         {busy && <Thinking>{busy}</Thinking>}

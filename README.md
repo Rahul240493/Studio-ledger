@@ -30,7 +30,7 @@ Production finance, projects, schedule and crew for **The Madking Studios**, **S
 
 ### 4. Vercel
 1. **Add New → Project → Import** the `studio-ledger` GitHub repo. Framework: Next.js (auto-detected). Deploy once (it will fail to sign in until the variables are set; that's fine) and note the URL.
-2. **Storage → Create → Blob** (choose **Private** if it asks for an access type) → connect it to this project. This adds `BLOB_READ_WRITE_TOKEN` automatically.
+2. **Storage → Create → Blob** (choose **Private** if it asks for an access type) → connect it to this project. Vercel adds the Blob settings (BLOB_STORE_ID etc.) automatically.
 3. **Settings → Environment Variables** — add each of these (Production + Preview):
 
 | Name | Value |
