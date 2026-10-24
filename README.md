@@ -54,6 +54,11 @@ Production finance, projects, schedule and crew for **The Madking Studios**, **S
 Open the app in Safari → Share → **Add to Home Screen**. On Android Chrome → ⋮ → **Install app**.
 
 ## Daily use
+- **Studio** (home): orbit of every project by pipeline stage, what needs attention, retainer output for the month, insights charts and the pipeline.
+- **Projects**: grouped by pipeline stage. Each project page has Overview (objective, scope, brand context, POCs, updates), Tickets (with standard ticket sets), Deliverables, Content, Schedule and, for partners, Money.
+- **Tickets**: every task with priority, status, POCs and deadline. Filters by project, person, priority, status and due date.
+- **Content**: the posting calendar (reels, statics, carousels…) with status from Idea to Posted.
+- **Team**: everyone's open work and P1s. Partners set job titles and groups.
 - **Log** (+): tap *Speak* (or the keyboard mic) and say what was spent or received. Several items at once is fine. Check the cards and save. *Attach invoice* reads a photo or PDF.
 - **Ask** (magnifier, top right): "AI subscriptions and credits this month" → table with exact totals.
 - **Schedule**: add shoots, recces, meetings; assign crew; every entry appears in the Studio Productions Google Calendar. Open an entry → **Call sheet** for a printable sheet.
