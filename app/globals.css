@@ -278,10 +278,13 @@ nav.tabs button{min-width:0}
   nav.tabs{display:none}
   .only-sm{display:none !important}
   .only-lg{display:grid}
-  .top-brand{visibility:hidden}
-  .main-col .wrap{padding-block:0 60px}
+  .main-col main.wrap{padding-block:0 60px}
+  .top .wrap{padding-block:10px}
+  .top-brand{display:none}
+  .top .sync{margin-left:auto}
 }
-.side-brand{padding:0 8px 6px}
+.side-brand{padding:0 8px 6px;line-height:1.5}
+.side-brand small{display:block;margin:2px 0 0}
 .side-nav{display:flex;flex-direction:column;gap:1px}
 .nav-btn,.side-proj{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:var(--r);background:none;color:var(--muted);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:left;cursor:pointer}
 .nav-btn svg{width:18px;height:18px;flex:none}
