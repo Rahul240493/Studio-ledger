@@ -248,3 +248,18 @@ button.proj:hover{background:var(--sunk)}
   .cs-actions{display:none}
   .callsheet{padding:0}
 }
+
+/* today / attendance */
+.col.tight,.tight{gap:6px}
+.tight-row{gap:6px;flex-wrap:wrap}
+.prose{margin:0;white-space:pre-wrap;line-height:1.5}
+.rule{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.card textarea,.col textarea{border:1px solid var(--line);background:var(--bg);border-radius:var(--r);padding:10px;font-size:15px;color:var(--ink);width:100%;resize:vertical}
+.segs.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.segs.four .seg::before{display:none}
+@media (max-width:430px){.segs.four{grid-template-columns:repeat(2,1fr)}.segs.four .seg{border-top:1px solid var(--line);border-left:1px solid var(--line)}.segs.four .seg:nth-child(odd){border-left:0}.segs.four .seg:nth-child(-n+2){border-top:0}}
+.dayrow{border-top:1px solid var(--line)}
+.dayrow:first-child{border-top:0}
+.dayrow .item{border-top:0}
+.dayopen{display:grid;gap:12px;padding:4px 16px 16px}
+nav.tabs button{min-width:0}

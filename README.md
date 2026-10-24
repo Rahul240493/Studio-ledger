@@ -57,6 +57,7 @@ Open the app in Safari → Share → **Add to Home Screen**. On Android Chrome �
 - **Log** (+): tap *Speak* (or the keyboard mic) and say what was spent or received. Several items at once is fine. Check the cards and save. *Attach invoice* reads a photo or PDF.
 - **Ask** (magnifier, top right): "AI subscriptions and credits this month" → table with exact totals.
 - **Schedule**: add shoots, recces, meetings; assign crew; every entry appears in the Studio Productions Google Calendar. Open an entry → **Call sheet** for a printable sheet.
+- **Today**: everyone checks in each morning with their plan for the day, and checks out in the evening with what's finished and what's pending. Partners see the whole team's day, who's late or missing, and a monthly attendance table. Late = after 10:30 IST (change with `LATE_AFTER`, e.g. `10:00`).
 - **Projects**: budget, stage, plan/strategy. Employees can move stages and edit plans.
 - **Menu → Team access**: give employees access by Google email, or remove it.
 
