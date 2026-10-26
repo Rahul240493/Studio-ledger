@@ -13,6 +13,23 @@ export function parseISO(s) {
 export function today0() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 export function addDaysD(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 export const daysBetween = (a, b) => Math.round((b - a) / 864e5);
+
+// Post timing for the content calendar:
+// "ontime" (green) = posted on or before its date; "late1" (orange) = 1 day late;
+// "late2" (red) = 2+ days (over 48 hours) late. Unposted posts count as late once
+// their date has passed; a post marked "Delayed" is at least orange.
+export const TIMING_LABEL = { ontime: "Posted on time", late1: "1 day late", late2: "Over 48 hours late" };
+export function postTiming(c, todayStr = isoDate(new Date())) {
+  const due = parseISO(c.date);
+  if (!due) return "";
+  const grade = (n) => (n <= 0 ? "" : n === 1 ? "late1" : "late2");
+  if (c.status === "Posted") {
+    const at = parseISO(String(c.postedAt || "").slice(0, 10)) || due;
+    return grade(daysBetween(due, at)) || "ontime";
+  }
+  const late = grade(daysBetween(due, parseISO(todayStr)));
+  return c.status === "Delayed" ? late || "late1" : late;
+}
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const fmtShort = (s) => { const d = parseISO(s); return d ? `${d.getDate()} ${MON[d.getMonth()]}` : ""; };

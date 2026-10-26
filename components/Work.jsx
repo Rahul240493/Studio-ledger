@@ -322,7 +322,7 @@ function TeamLoad({ open }) {
   return <Chart title="Team load" sub={parts.join(", ")} legend={<PrLegend />}><StackedBars rows={shown.map((r) => ({ label: r.name, parts: prParts(r.c), tip: prTip(r.name, r.c), onClick: () => w.go({ view: "tickets", filter: { ...DEF_TF, person: r.email } }) }))} /></Chart>;
 }
 
-const C_RAMP = { Idea: "var(--line)", Scripting: "var(--line)", Shoot: "var(--muted)", Edit: "var(--muted)", "Client review": "var(--muted)", Approved: "var(--ink2)", Scheduled: "var(--ink2)", Posted: "var(--ink)" };
+const C_RAMP = { Idea: "var(--line)", Scripting: "var(--line)", Shoot: "var(--muted)", Edit: "var(--muted)", "Client review": "var(--muted)", Approved: "var(--ink2)", Scheduled: "var(--ink2)", Delayed: "var(--late2)", Posted: "var(--ink)" };
 function ContentPipeline({ content }) {
   const w = useWork();
   const ym = ymNow(), items = content.filter((c) => c.date?.slice(0, 7) === ym);

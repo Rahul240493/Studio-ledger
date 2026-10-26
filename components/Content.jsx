@@ -4,7 +4,7 @@ import { C_FORMATS, C_GLYPH, C_STATUS, PLATFORMS } from "@/lib/config";
 import { api } from "./util";
 import { Modal, Field, Confirm, useToast } from "./ui";
 import { useWork, Seg, Dot, PeoplePicker, MonthGrid, MonthNav, monthLabelOf } from "./workui";
-import { output, splitList, parseISO, sortProjects, ymNow, pipelineOf } from "./workdata";
+import { output, splitList, parseISO, sortProjects, ymNow, pipelineOf, postTiming, TIMING_LABEL } from "./workdata";
 
 const slug = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
@@ -12,15 +12,21 @@ export function ContentChip({ c, showProject }) {
   const w = useWork();
   const p = w.projectById[c.projectId];
   const label = c.title || (showProject ? c.format : `${p ? p.name + " " : ""}${String(c.format).toLowerCase()}`);
+  const tm = postTiming(c);
   return (
-    <button type="button" className={`ev cev st-${slug(c.status)}`} style={{ "--c": p?.color || "var(--muted)" }} onClick={(e) => { e.stopPropagation(); w.openPost(c); }} title={`${p ? p.name + ": " : ""}${label} (${c.status})`}>
+    <button type="button" className={`ev cev st-${slug(c.status)}${tm ? " tm-" + tm : ""}`} style={{ "--c": p?.color || "var(--muted)" }} onClick={(e) => { e.stopPropagation(); w.openPost(c); }} title={`${p ? p.name + ": " : ""}${label} (${c.status}${tm ? ", " + TIMING_LABEL[tm].toLowerCase() : ""})`}>
       <i className="glyph" aria-hidden="true">{C_GLYPH[c.format] || "•"}</i>
       {showProject && p ? <span className="t2"><span className="pn">{p.name}</span><span className="t">{label}</span></span> : <span className="t">{label}</span>}
     </button>
   );
 }
 
-export const ContentLegend = () => <div className="legend">{C_STATUS.map((s) => <span key={s}><i className={`sw st-${slug(s)}`} />{s}</span>)}</div>;
+export const ContentLegend = () => (
+  <>
+    <div className="legend">{Object.entries(TIMING_LABEL).map(([k, l]) => <span key={k}><i className={`sw tm-${k}`} />{l}</span>)}</div>
+    <div className="legend">{C_STATUS.map((s) => <span key={s}><i className={`sw st-${slug(s)}`} />{s}</span>)}</div>
+  </>
+);
 
 function Progress({ label, o, color }) {
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : a ? 100 : 0) + "%";
