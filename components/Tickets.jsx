@@ -1,17 +1,19 @@
 "use client";
 import { useMemo, useState } from "react";
-import { PRIORITIES, T_STATUS, T_KIND, EARLY } from "@/lib/config";
+import { PRIORITIES, T_STATUS, T_KIND, EARLY, C_STATUS, C_GLYPH } from "@/lib/config";
 import { api } from "./util";
 import { Modal, Field, Confirm, useToast } from "./ui";
 import { useWork, Seg, Dot, Pri, Avatars, PeoplePicker, MonthGrid, MonthNav, monthLabelOf } from "./workui";
-import { dueInfo, isOpen, sortTickets, splitList, parseISO, today0, daysBetween, plural, memberMap, sortProjects, monthlyTickets, relTickets, contentSlots, isoDate, fmtShort, ymNow, pipelineOf } from "./workdata";
+import { dueInfo, isOpen, sortTickets, splitList, parseISO, today0, daysBetween, plural, memberMap, sortProjects, monthlyTickets, relTickets, contentSlots, isoDate, fmtShort, ymNow, pipelineOf, ticketTiming, rowTiming, postAsTicket, TICKET_TIMING_LABEL } from "./workdata";
 import { ONE_TIME_TPL, LEAD_TPL } from "@/lib/config";
 
-export const DEF_TF = { project: "", person: "", priority: "", status: "open", due: "any", sort: "deadline" };
+export const DEF_TF = { project: "", person: "", priority: "", status: "open", due: "any", sort: "deadline", show: "all" };
 
 export function applyTicketFilters(ts, f) {
   const t0 = today0();
   return ts.filter((t) => {
+    if (f.show === "tickets" && t._post) return false;
+    if (f.show === "posts" && !t._post) return false;
     if (f.project && t.projectId !== f.project) return false;
     const pocs = splitList(t.pocs);
     if (f.person === "__none") { if (pocs.length) return false; }
@@ -32,7 +34,7 @@ export function TicketChip({ t, showProject }) {
   const w = useWork();
   const p = w.projectById[t.projectId];
   return (
-    <button type="button" className={`ev${t.status === "Done" ? " done" : ""}`} style={{ "--c": p?.color || "var(--muted)" }} onClick={(e) => { e.stopPropagation(); w.openTicket(t); }} title={(p ? p.name + ": " : "") + t.title}>
+    <button type="button" className={`ev${t.status === "Done" ? " done" : ""} tm-${ticketTiming(t) || "none"}`} style={{ "--c": p?.color || "var(--muted)" }} onClick={(e) => { e.stopPropagation(); w.openTicket(t); }} title={(p ? p.name + ": " : "") + t.title}>
       <Pri v={t.priority} />
       {showProject && p ? <span className="t2"><span className="pn">{p.name}</span><span className="t">{t.title}</span></span> : <span className="t">{t.title}</span>}
     </button>
@@ -59,19 +61,26 @@ export function TicketTable({ tickets, showProject = true, sort = "deadline" }) 
   async function patch(t, change) {
     try { await api(`/api/rec/tickets/${t.id}`, { method: "PUT", body: change }); await w.reload(); } catch (e) { toast(e.message); }
   }
+  async function patchPost(c, change) {
+    try { await api(`/api/rec/content/${c.id}`, { method: "PUT", body: change }); await w.reload(); } catch (e) { toast(e.message); }
+  }
   const stop = (e) => e.stopPropagation();
   return (
     <div className="tlist" role="table">
       <div className={`trow head${showProject ? "" : " no-proj"}`} role="row"><span>Ticket</span>{showProject && <span>Project</span>}<span>Priority</span><span>Status</span><span>POCs</span><span>Deadline</span><span>Type</span></div>
-      {rows.map((t) => { const p = w.projectById[t.projectId]; const di = dueInfo(t.deadline, t.status === "Done"); return (
-        <div key={t.id} className={`trow${showProject ? "" : " no-proj"}${t.status === "Done" ? " done" : ""}`} role="row" tabIndex={0} onClick={() => w.openTicket(t)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && w.openTicket(t)}>
-          <span className="c-title"><Pri v={t.priority} /><span className="title">{t.title}</span></span>
+      {rows.map((t) => { const p = w.projectById[t.projectId]; const c = t._post; const di = dueInfo(t.deadline, !isOpen(t)); const tm = rowTiming(t);
+        const open = () => (c ? w.openPost(c) : w.openTicket(t));
+        return (
+        <div key={t.id} className={`trow${showProject ? "" : " no-proj"}${!isOpen(t) ? " done" : ""}${tm ? " tm-" + tm : ""}`} role="row" tabIndex={0} onClick={open} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && open()} title={tm ? TICKET_TIMING_LABEL[tm] : undefined}>
+          <span className="c-title">{c ? <i className="glyph" aria-hidden="true">{C_GLYPH[c.format] || "•"}</i> : <Pri v={t.priority} />}<span className="title">{t.title}</span></span>
           {showProject && <span className="c-proj muted">{p && <Dot p={p} size={8} />}{p ? p.name : "No project"}</span>}
-          <span><select className="mini" value={t.priority} onClick={stop} onKeyDown={stop} onChange={(e) => patch(t, { priority: e.target.value })} aria-label="Priority">{PRIORITIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></span>
-          <span><select className="mini" value={t.status} onClick={stop} onKeyDown={stop} onChange={(e) => patch(t, { status: e.target.value })} aria-label="Status">{T_STATUS.map((s) => <option key={s}>{s}</option>)}</select></span>
+          <span>{c ? <span className="faint">Post</span> : <select className="mini" value={t.priority} onClick={stop} onKeyDown={stop} onChange={(e) => patch(t, { priority: e.target.value })} aria-label="Priority">{PRIORITIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</span>
+          <span>{c
+            ? <select className="mini" value={t.status} onClick={stop} onKeyDown={stop} onChange={(e) => patchPost(c, { status: e.target.value })} aria-label="Status">{C_STATUS.map((s) => <option key={s}>{s}</option>)}</select>
+            : <select className="mini" value={t.status} onClick={stop} onKeyDown={stop} onChange={(e) => patch(t, { status: e.target.value })} aria-label="Status">{T_STATUS.map((s) => <option key={s}>{s}</option>)}</select>}</span>
           <span><Avatars emails={splitList(t.pocs)} members={members} /></span>
           <span className={`due ${di.cls}`}>{di.text}</span>
-          <span className="muted">{t.kind === "Client deliverable" ? "Client" : "Internal"}</span>
+          <span className="muted">{c ? `Content · ${c.format}` : t.kind === "Client deliverable" ? "Client" : "Internal"}</span>
         </div>); })}
     </div>
   );
@@ -80,17 +89,18 @@ export function TicketTable({ tickets, showProject = true, sort = "deadline" }) 
 export function TicketsView() {
   const w = useWork();
   const [f, setF] = useState(w.ticketFilter || DEF_TF);
-  const all = w.data.tickets;
+  const all = [...w.data.tickets, ...w.data.content.map(postAsTicket)];
   const ts = applyTicketFilters(all, f);
   const set = (k, v) => setF({ ...f, [k]: v });
   const projects = sortProjects(w.data.projects);
   return (
     <>
       <div className="page-head">
-        <div><h2 className="page-title">Tickets</h2><p className="hint">{ts.length} of {all.length} {plural(all.length, "ticket")} shown.</p></div>
+        <div><h2 className="page-title">Tickets</h2><p className="hint">{ts.length} of {all.length} shown: tickets and content-calendar posts.</p></div>
         <button className="btn primary" onClick={() => w.openTicket({ projectId: f.project })}>New ticket</button>
       </div>
       <div className="filters">
+        <label className="filter">Show<select className="mini" value={f.show || "all"} onChange={(e) => set("show", e.target.value)}><option value="all">Tickets and posts</option><option value="tickets">Tickets only</option><option value="posts">Content posts only</option></select></label>
         <label className="filter">Project<select className="mini" value={f.project} onChange={(e) => set("project", e.target.value)}><option value="">All projects</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
         <label className="filter">POC<select className="mini" value={f.person} onChange={(e) => set("person", e.target.value)}><option value="">Everyone</option><option value="__none">Unassigned</option>{w.data.members.map((m) => <option key={m.email} value={m.email}>{m.name}</option>)}</select></label>
         <label className="filter">Priority<select className="mini" value={f.priority} onChange={(e) => set("priority", e.target.value)}><option value="">Any</option>{PRIORITIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
@@ -99,7 +109,8 @@ export function TicketsView() {
         <Seg options={[["deadline", "By deadline"], ["priority", "By priority"]]} value={f.sort} onChange={(v) => set("sort", v)} />
         {JSON.stringify(f) !== JSON.stringify(DEF_TF) && <button className="btn ghost" onClick={() => setF(DEF_TF)}>Reset</button>}
       </div>
-      {ts.length ? <TicketTable tickets={ts} sort={f.sort} /> : <div className="empty-box"><p>No tickets match these filters.</p><p>Reset the filters or add a ticket.</p></div>}
+      {ts.length ? <TicketTable tickets={ts} sort={f.sort} /> : <div className="empty-box"><p>Nothing matches these filters.</p><p>Reset the filters or add a ticket.</p></div>}
+      <div className="legend">{Object.entries(TICKET_TIMING_LABEL).map(([k, l]) => <span key={k}><i className={`sw tm-${k}`} />{l}</span>)}</div>
     </>
   );
 }

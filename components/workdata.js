@@ -49,7 +49,7 @@ export function dueInfo(s, done) {
   return { text: fmtShort(s), cls: "" };
 }
 
-export const isOpen = (t) => t.status !== "Done";
+export const isOpen = (t) => (t._post ? t.status !== "Posted" : t.status !== "Done");
 export const byDeadline = (a, b) => String(a.deadline || "9999").localeCompare(String(b.deadline || "9999"));
 export function sortTickets(mode) {
   return (a, b) => {
@@ -123,3 +123,21 @@ export function contentSlots(p, ym) {
   const platform = splitList(p.platforms)[0] || "Instagram";
   return pos.map((o) => ({ format: o.f, date: isoDate(new Date(y, m - 1, Math.min(days, 1 + Math.floor(o.x * days)))), status: "Idea", title: "", platform }));
 }
+
+// Ticket timing, same colours as the content calendar: green on track or done on time,
+// orange 1 day late, red 2+ days (over 48 hours) late.
+export function ticketTiming(t, todayStr = isoDate(new Date())) {
+  const due = parseISO(t.deadline);
+  if (!due) return "";
+  const grade = (n) => (n <= 0 ? "ontime" : n === 1 ? "late1" : "late2");
+  if (t.status === "Done") {
+    const at = t.doneAt ? new Date(t.doneAt) : null;
+    return grade(at && !isNaN(at) ? daysBetween(due, parseISO(isoDate(at))) : 0);
+  }
+  return grade(daysBetween(due, parseISO(todayStr)));
+}
+export const TICKET_TIMING_LABEL = { ontime: "On track / on time", late1: "1 day late", late2: "Over 48 hours late" };
+
+// A content post shown as a row in the Tickets list (deadline = post date).
+export const postAsTicket = (c) => ({ id: "post:" + c.id, _post: c, projectId: c.projectId, title: c.title || `${c.format} post`, priority: "", status: c.status, pocs: c.owners, deadline: c.date, kind: "Content" });
+export const rowTiming = (t) => (t._post ? postTiming(t._post) || "ontime" : ticketTiming(t));

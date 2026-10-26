@@ -442,6 +442,11 @@ svg.orbit{display:block;width:100%;height:auto;overflow:visible}
 .trow{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,1.2fr) 120px 128px 104px 124px 72px;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}
 .trow.no-proj{grid-template-columns:minmax(0,3fr) 120px 128px 104px 124px 72px}
 .trow:last-child{border-bottom:0}
+/* Ticket timing: green on track, orange 1 day late, red over 48 hours late. */
+.trow.tm-ontime{box-shadow:inset 4px 0 0 var(--ontime);background:rgba(47,191,113,.07)}
+.trow.tm-late1{box-shadow:inset 4px 0 0 var(--late1);background:rgba(255,159,26,.1)}
+.trow.tm-late2{box-shadow:inset 4px 0 0 var(--late2);background:rgba(255,74,61,.1)}
+.trow.tm-ontime .due{color:var(--ontime)}.trow.tm-late1 .due{color:var(--late1)}.trow.tm-late2 .due{color:var(--late2)}
 .trow.head{cursor:default;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);background:var(--sunk);padding-top:8px;padding-bottom:8px}
 .trow:not(.head):hover{background:var(--sunk)}
 .trow .c-title{display:flex;align-items:center;gap:9px;min-width:0}
