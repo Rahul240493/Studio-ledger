@@ -16,8 +16,8 @@ function Login() {
   return (
     <main className="login">
       <div className="login-box">
+        <div className="logos login-logos"><img src="/logos/mk-logo.png" alt="The Madking Studios" /><span className="logo-sep" aria-hidden="true" /><img src="/logos/sg-logo.png" alt="Space & Gravity" /></div>
         <div className="brand big">Studio Ledger</div>
-        <p className="muted">Madking Studios · Space &amp; Gravity</p>
         {err && <div className="banner">{MESSAGES[err] || "Sign-in didn't work. Try again."}<div className="hint" style={{ marginTop: 6 }}>Code: {err}</div></div>}
         <button className="btn primary wide-btn" onClick={() => signIn("google", { callbackUrl: "/" })}>Sign in with Google</button>
       </div>

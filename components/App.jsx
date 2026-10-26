@@ -107,6 +107,7 @@ function Shell() {
     <WorkCtx.Provider value={ctx}>
       <div className="shell">
         <aside className="side">
+          <div className="logos side-logos" aria-label="The Madking Studios and Space & Gravity"><img src="/logos/mk-logo.png" alt="The Madking Studios" /><span className="logo-sep" aria-hidden="true" /><img src="/logos/sg-logo.png" alt="Space & Gravity" /></div>
           <div className="brand side-brand">Studio Ledger<small>{isP ? "Partner" : "Team"}</small></div>
           <nav className="side-nav" aria-label="Work">{WORK_NAV.map(navBtn)}</nav>
           {isP && <><p className="side-h">Money · partners only</p><nav className="side-nav" aria-label="Money">{MONEY_NAV.map(navBtn)}</nav></>}
@@ -117,7 +118,7 @@ function Shell() {
 
         <div className="main-col">
           <header className="top"><div className="wrap">
-            <div className="brand top-brand">Studio Ledger<small>{isP ? "Partner" : "Team"}</small></div>
+            <div className="top-brand row-brand"><div className="logos top-logos" aria-label="The Madking Studios and Space & Gravity"><img src="/logos/mk-logo.png" alt="The Madking Studios" /><span className="logo-sep" aria-hidden="true" /><img src="/logos/sg-logo.png" alt="Space & Gravity" /></div><div className="brand">Studio Ledger<small>{isP ? "Partner" : "Team"}</small></div></div>
             <div className="sync">
               <span className="hide-sm">{syncing ? "Syncing…" : ""}</span>
               {isP && <button className="iconbtn" aria-label="Ask the books" onClick={() => go({ view: "ask" })}>{I.ask}</button>}
