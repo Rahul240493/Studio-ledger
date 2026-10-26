@@ -1,10 +1,10 @@
 "use client";
 import { useId, useMemo, useState } from "react";
-import { SEGMENTS, EXPENSE_CATS, INCOME_CATS, MODES } from "@/lib/config";
+import { SEGMENTS, EXPENSE_CATS, INCOME_CATS, MODES, TAX_CAT } from "@/lib/config";
 import { api, rs, rsx, rsShort, r2, num, ym, today, fmtDate, monthLabel, shiftMonth, segOf } from "./util";
 import { Modal, Field, Select, Thinking, Confirm, useToast, useSpeech } from "./ui";
 
-const sums = (list) => { let inc = 0, exp = 0, gi = 0, ge = 0; for (const e of list) { if (e.type === "Income") { inc += e.amount; gi += e.gst; } else { exp += e.amount; ge += e.gst; } } return { inc, exp, gi, ge, net: inc - exp }; };
+const sums = (list) => { let inc = 0, exp = 0, gi = 0, ge = 0; for (const e of list) { if (e.type === "Income") { inc += e.amount; gi += e.gst; } else if (e.category === TAX_CAT) ge += e.total || e.amount; else { exp += e.amount; ge += e.gst; } } return { inc, exp, gi, ge, net: inc - exp }; };
 
 export function EntryRow({ e, onOpen }) {
   const s = segOf(e.segment);
@@ -25,7 +25,7 @@ export function Overview({ data, openEntry, go }) {
   const L = data.ledger;
   const list = L.filter((e) => e.date?.slice(0, 7) === month);
   const all = sums(list);
-  const exp = list.filter((e) => e.type !== "Income" && (seg === "All" || e.segment === seg));
+  const exp = list.filter((e) => e.type !== "Income" && e.category !== TAX_CAT && (seg === "All" || e.segment === seg));
   const byCat = {};
   exp.forEach((e) => { const c = e.category || "Uncategorised"; byCat[c] ||= { t: 0, seg: {} }; byCat[c].t += e.amount; byCat[c].seg[e.segment] = (byCat[c].seg[e.segment] || 0) + e.amount; });
   const cats = Object.entries(byCat).sort((a, b) => b[1].t - a[1].t);
