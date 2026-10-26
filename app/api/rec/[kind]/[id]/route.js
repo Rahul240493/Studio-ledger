@@ -16,8 +16,8 @@ export const PUT = handle(async (req, { params }) => {
   }
   if (params.kind === "content") {
     // The day it went live decides on time (green) vs late (orange/red) on the calendar.
-    if (next.status === "Posted" && old.status !== "Posted") next.postedAt = istToday();
-    if (next.status !== "Posted") next.postedAt = "";
+    // Switched to Posted without a "Posted on" day (e.g. from a status dropdown): it went live today.
+    if (next.status === "Posted" && old.status !== "Posted" && !next.postedAt) next.postedAt = istToday();
   }
   await updateRow(k.tab, old.id, next);
   return { ok: true };

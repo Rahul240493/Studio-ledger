@@ -13,7 +13,8 @@ export const POST = handle(async (req, { params }) => {
   const rows = list.map((x, i) => {
     const r = { ...k.clean(x), id: uid(k.prefix) + i, createdBy: me.name, createdAt: new Date(now + i).toISOString() };
     if (params.kind === "tickets" && r.status === "Done") r.doneAt = new Date(now).toISOString();
-    if (params.kind === "content" && r.status === "Posted") r.postedAt = istToday();
+    // Logged as already posted (often back-filled later): unless a "Posted on" day is given, count it as posted on its date.
+    if (params.kind === "content" && r.status === "Posted" && !r.postedAt) { const t = istToday(); r.postedAt = r.date < t ? r.date : t; }
     if (params.kind === "updates") { r.date = istToday(); r.by = me.name; r.at = new Date(now).toISOString(); }
     return r;
   });

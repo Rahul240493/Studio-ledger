@@ -4,7 +4,7 @@ import { C_FORMATS, C_GLYPH, C_STATUS, PLATFORMS } from "@/lib/config";
 import { api } from "./util";
 import { Modal, Field, Confirm, useToast } from "./ui";
 import { useWork, Seg, Dot, PeoplePicker, MonthGrid, MonthNav, monthLabelOf } from "./workui";
-import { output, splitList, parseISO, sortProjects, ymNow, pipelineOf, postTiming, TIMING_LABEL } from "./workdata";
+import { output, splitList, parseISO, sortProjects, ymNow, pipelineOf, postTiming, TIMING_LABEL, isoDate } from "./workdata";
 
 const slug = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
@@ -122,7 +122,8 @@ export function PostModal({ c, onClose }) {
         <Field label="Post date"><input type="date" value={d.date} onChange={set("date")} /></Field>
         <div className="wide col tight"><span className="flabel">Format</span><Seg options={C_FORMATS} value={d.format} onChange={set("format")} /></div>
         <Field label="Platform"><select value={d.platform} onChange={set("platform")}>{PLATFORMS.map((s) => <option key={s}>{s}</option>)}</select></Field>
-        <Field label="Status"><select value={d.status} onChange={set("status")}>{C_STATUS.map((s) => <option key={s}>{s}</option>)}</select></Field>
+        <Field label="Status"><select value={d.status} onChange={(e) => { const v = e.target.value; setD({ ...d, status: v, postedAt: v === "Posted" ? d.postedAt || isoDate(new Date()) : "" }); }}>{C_STATUS.map((s) => <option key={s}>{s}</option>)}</select></Field>
+        {d.status === "Posted" && <Field label="Posted on"><input type="date" value={String(d.postedAt || "").slice(0, 10)} onChange={set("postedAt")} /></Field>}
         <div className="wide col tight"><span className="flabel">Owners</span><PeoplePicker value={d.owners} onChange={(v) => setD({ ...d, owners: v })} members={w.data.members} /></div>
         <Field label="Link" wide><input type="url" value={d.link} onChange={set("link")} placeholder="Draft or published link" /></Field>
         <Field label="Notes" wide><textarea rows={3} value={d.notes} onChange={set("notes")} placeholder="Script notes, references, caption" /></Field>
