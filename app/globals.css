@@ -526,3 +526,6 @@ svg.orbit{display:block;width:100%;height:auto;overflow:visible}
 .login-logos img[src*="mk-"]{height:84px}.login-logos img[src*="sg-"]{height:44px}
 .login-box .brand.big{text-align:center}
 @media (max-width:380px){.row-brand .brand{display:none}}
+
+.plain-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.plain-list.num{list-style:decimal}

@@ -14,6 +14,7 @@ import { TicketsView, TicketModal, DeadlinesCalendar } from "./Tickets";
 import { ContentView, PostModal } from "./Content";
 import { TeamWorkView } from "./TeamWork";
 import { WorkCtx, Seg } from "./workui";
+import { ConnectView } from "./Connect";
 
 const ic = (d, extra) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}{extra}</svg>;
 const I = {
@@ -31,10 +32,11 @@ const I = {
   ask: ic(<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>),
   team: ic(<><rect x="5" y="10" width="14" height="10" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>),
   more: ic(<path d="M4 7h16M4 12h16M4 17h16" />),
+  claude: ic(<><path d="M9 7 4 12l5 5M15 7l5 5-5 5" /></>),
   refresh: ic(<><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></>),
 };
 
-const WORK_NAV = [["work", "Studio"], ["today", "Today"], ["projects", "Projects"], ["tickets", "Tickets"], ["schedule", "Schedule"], ["content", "Content"], ["teamwork", "Team"], ["crew", "Crew & talent"]];
+const WORK_NAV = [["work", "Studio"], ["today", "Today"], ["projects", "Projects"], ["tickets", "Tickets"], ["schedule", "Schedule"], ["content", "Content"], ["teamwork", "Team"], ["crew", "Crew & talent"], ["claude", "Connect Claude"]];
 const MONEY_NAV = [["money", "Money"], ["ledger", "Ledger"], ["log", "Log"], ["ask", "Ask the books"], ["team", "Team access"]];
 const PARTNER_BOTTOM = [["work", "Studio"], ["tickets", "Tickets"], ["log", "Log"], ["today", "Today"], ["more", "More"]];
 const EMPLOYEE_BOTTOM = [["today", "Today"], ["work", "Studio"], ["tickets", "Tickets"], ["content", "Content"], ["more", "More"]];
@@ -139,6 +141,7 @@ function Shell() {
             {view === "content" && <ContentView key={route.status || ""} />}
             {view === "teamwork" && <TeamWorkView />}
             {view === "crew" && <PeopleView data={data} reload={load} />}
+            {view === "claude" && <ConnectView me={data.me} />}
             {view === "money" && isP && <Overview data={data} openEntry={setEntry} go={(t) => go({ view: t === "projects" ? "projects" : t })} />}
             {view === "ledger" && isP && <LedgerView data={data} openEntry={setEntry} />}
             {view === "log" && isP && <LogView data={data} reload={load} />}

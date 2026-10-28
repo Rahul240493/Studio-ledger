@@ -36,7 +36,7 @@ export const GET = handle(async () => {
     content: d.Content || [],
     updates: d.Updates || [],
     ledger: me.isPartner ? d.Ledger || [] : undefined,
-    team: me.isPartner ? (d.Team || []).filter((t) => !pset.has(String(t.email).toLowerCase())) : undefined,
+    team: me.isPartner ? (d.Team || []).filter((t) => !pset.has(String(t.email).toLowerCase())).map(({ mcpKey, ...t }) => t) : undefined,
     partners: me.isPartner ? [...pset] : undefined,
     sheetUrl: me.isPartner && process.env.GOOGLE_SHEET_ID ? `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}/edit` : undefined,
   };
