@@ -529,3 +529,18 @@ svg.orbit{display:block;width:100%;height:auto;overflow:visible}
 
 .plain-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .plain-list.num{list-style:decimal}
+
+/* Content: late badge, ad-hoc tag, month summary */
+.late-badge{flex:none;margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.02em;padding:1px 4px;background:var(--late1);color:#000;line-height:1.3}
+.ev .t,.ev .pn{min-width:0}
+.tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:1px 4px;margin-right:5px;border:1px solid currentColor;line-height:1.2;vertical-align:1px}
+.ev.adhoc{outline:1px dashed var(--ink2);outline-offset:-3px}
+.legend .late-badge,.legend .tag{margin:0 6px 0 0}
+.csum{gap:8px}
+.csum-stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
+.csum-stats b{color:var(--ink);font-size:16px;margin-right:3px}
+.csum-stats .warn b{color:var(--late1)}.csum-stats .bad b{color:var(--late2)}
+.csum details summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.csum .plain-list{margin-top:8px;font-size:13px}
+.linkish{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font:inherit;text-align:left}
+.warn-banner{border-color:var(--late1)}

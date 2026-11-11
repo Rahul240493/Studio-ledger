@@ -14,22 +14,25 @@ export function today0() { const d = new Date(); d.setHours(0, 0, 0, 0); return 
 export function addDaysD(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 export const daysBetween = (a, b) => Math.round((b - a) / 864e5);
 
-// Post timing for the content calendar:
-// "ontime" (green) = posted on or before its date; "late1" (orange) = 1 day late;
-// "late2" (red) = 2+ days (over 48 hours) late. Unposted posts count as late once
-// their date has passed; a post marked "Delayed" is at least orange.
-export const TIMING_LABEL = { ontime: "Posted on time", late1: "1 day late", late2: "Over 48 hours late" };
-export function postTiming(c, todayStr = isoDate(new Date())) {
+// Post timing for the content calendar.
+// Posted = green, even if it went out late (the delay is kept and shown as "posted N days late").
+// Not posted yet: orange once it's 1 day past its date, red after 2+ days (over 48 hours). "Delayed" is at least orange.
+export const TIMING_LABEL = { ontime: "Posted", late1: "1 day overdue", late2: "Over 48 hours overdue" };
+// Days late: for a posted post, how late it went out; for an unposted one, how far past its date it is now.
+export function postDaysLate(c, todayStr = isoDate(new Date())) {
   const due = parseISO(c.date);
-  if (!due) return "";
-  const grade = (n) => (n <= 0 ? "" : n === 1 ? "late1" : "late2");
-  if (c.status === "Posted") {
-    const at = parseISO(String(c.postedAt || "").slice(0, 10)) || due;
-    return grade(daysBetween(due, at)) || "ontime";
-  }
-  const late = grade(daysBetween(due, parseISO(todayStr)));
+  if (!due) return 0;
+  const at = c.status === "Posted" ? parseISO(String(c.postedAt || "").slice(0, 10)) || due : parseISO(todayStr);
+  return Math.max(0, daysBetween(due, at));
+}
+export function postTiming(c, todayStr = isoDate(new Date())) {
+  if (!parseISO(c.date)) return "";
+  if (c.status === "Posted") return "ontime";
+  const n = postDaysLate(c, todayStr);
+  const late = n <= 0 ? "" : n === 1 ? "late1" : "late2";
   return c.status === "Delayed" ? late || "late1" : late;
 }
+export const lateText = (n) => (n === 1 ? "1 day late" : `${n} days late`);
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const fmtShort = (s) => { const d = parseISO(s); return d ? `${d.getDate()} ${MON[d.getMonth()]}` : ""; };

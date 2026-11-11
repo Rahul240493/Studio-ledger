@@ -80,7 +80,7 @@ export function TicketTable({ tickets, showProject = true, sort = "deadline" }) 
             : <select className="mini" value={t.status} onClick={stop} onKeyDown={stop} onChange={(e) => patch(t, { status: e.target.value })} aria-label="Status">{T_STATUS.map((s) => <option key={s}>{s}</option>)}</select>}</span>
           <span><Avatars emails={splitList(t.pocs)} members={members} /></span>
           <span className={`due ${di.cls}`}>{di.text}</span>
-          <span className="muted">{c ? `Content · ${c.format}` : t.kind === "Client deliverable" ? "Client" : "Internal"}</span>
+          <span className="muted">{c ? `${c.source === "Ad-hoc" ? "Ad-hoc" : "Content"} · ${c.format}` : t.kind === "Client deliverable" ? "Client" : "Internal"}</span>
         </div>); })}
     </div>
   );
