@@ -1,5 +1,6 @@
 import { currentUser, handle, uid } from "@/lib/access";
-import { appendRows } from "@/lib/google";
+import { appendRows, readTab, updateRows } from "@/lib/google";
+import { postedDefaults, slotUpdates } from "@/lib/contentRules";
 import { kindOf } from "@/lib/recApi";
 import { istToday } from "@/lib/ist";
 
@@ -13,11 +14,13 @@ export const POST = handle(async (req, { params }) => {
   const rows = list.map((x, i) => {
     const r = { ...k.clean(x), id: uid(k.prefix) + i, createdBy: me.name, createdAt: new Date(now + i).toISOString() };
     if (params.kind === "tickets" && r.status === "Done") r.doneAt = new Date(now).toISOString();
-    // Logged as already posted (often back-filled later): unless a "Posted on" day is given, count it as posted on its date.
-    if (params.kind === "content" && r.status === "Posted" && !r.postedAt) { const t = istToday(); r.postedAt = r.date < t ? r.date : t; }
+    if (params.kind === "content") postedDefaults(r, null);
     if (params.kind === "updates") { r.date = istToday(); r.by = me.name; r.at = new Date(now).toISOString(); }
     return r;
   });
+  let slots = [];
+  if (params.kind === "content" && rows.some((r) => r.linkedTo)) slots = slotUpdates(rows, await readTab("Content"));
   await appendRows(k.tab, rows);
+  if (slots.length) await updateRows("Content", slots);
   return { ok: true, ids: rows.map((r) => r.id) };
 });

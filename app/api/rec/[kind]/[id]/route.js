@@ -1,5 +1,6 @@
 import { currentUser, handle } from "@/lib/access";
-import { readTab, updateRow, deleteRow } from "@/lib/google";
+import { readTab, updateRow, updateRows, deleteRow } from "@/lib/google";
+import { postedDefaults, slotUpdates } from "@/lib/contentRules";
 import { kindOf } from "@/lib/recApi";
 import { istToday } from "@/lib/ist";
 
@@ -7,7 +8,8 @@ import { istToday } from "@/lib/ist";
 export const PUT = handle(async (req, { params }) => {
   await currentUser();
   const k = kindOf(params.kind);
-  const old = (await readTab(k.tab)).find((r) => r.id === params.id);
+  const all = await readTab(k.tab);
+  const old = all.find((r) => r.id === params.id);
   if (!old) return Response.json({ error: "That item no longer exists. Refresh and try again." }, { status: 404 });
   const next = { ...old, ...k.clean({ ...old, ...(await req.json()) }) };
   if (params.kind === "tickets") {
@@ -15,9 +17,10 @@ export const PUT = handle(async (req, { params }) => {
     if (next.status !== "Done") next.doneAt = "";
   }
   if (params.kind === "content") {
-    // The day it went live decides on time (green) vs late (orange/red) on the calendar.
-    // Switched to Posted without a "Posted on" day (e.g. from a status dropdown): it went live today.
-    if (next.status === "Posted" && old.status !== "Posted" && !next.postedAt) next.postedAt = istToday();
+    postedDefaults(next, old);
+    const slots = next.linkedTo && next.linkedTo !== old.linkedTo ? slotUpdates([next], all) : [];
+    await updateRows("Content", [next, ...slots]);
+    return { ok: true };
   }
   await updateRow(k.tab, old.id, next);
   return { ok: true };

@@ -41,7 +41,13 @@ async function handleOne(msg, user) {
 }
 
 export async function POST(req, { params }) {
-  const user = await userForKey(params.key).catch(() => null);
+  let user;
+  try { user = await userForKey(params.key); }
+  catch (e) {
+    console.error("MCP key lookup failed", e?.message);
+    // Google being busy is not an authentication problem: tell Claude to retry instead of failing sign-in.
+    return Response.json(fail(null, -32002, "The studio sheet is busy right now. Try again in a few seconds."), { status: 503, headers: { "Retry-After": "5" } });
+  }
   if (!user) return Response.json(fail(null, -32001, "This Claude link isn't valid any more. Make a new one in Studio Ledger → Connect Claude."), { status: 401 });
   let body;
   try { body = await req.json(); } catch { return Response.json(fail(null, -32700, "Parse error"), { status: 400 }); }

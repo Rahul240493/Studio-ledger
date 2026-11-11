@@ -10,7 +10,7 @@ export function ToastHost({ children }) {
   return <ToastCtx.Provider value={show}>{children}{msg ? <div className="toast" role="status">{msg}</div> : null}</ToastCtx.Provider>;
 }
 
-export function Modal({ title, onClose, children }) {
+export function Modal({ title, onClose, children, wide }) {
   useEffect(() => {
     const k = (e) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", k); document.body.style.overflow = "hidden";
@@ -18,7 +18,7 @@ export function Modal({ title, onClose, children }) {
   }, [onClose]);
   return (
     <div className="scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`sheet${wide ? " wide" : ""}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="row spread"><h2>{title}</h2><button className="btn ghost" onClick={onClose}>Close</button></div>
         {children}
       </div>

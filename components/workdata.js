@@ -1,4 +1,5 @@
 "use client";
+import { delivery, isPosted } from "@/lib/posts";
 // Shared helpers for the work tracker: projects, tickets, posts, team.
 import { PR_RANK, PIPE_ORDER } from "@/lib/config";
 
@@ -14,25 +15,21 @@ export function today0() { const d = new Date(); d.setHours(0, 0, 0, 0); return 
 export function addDaysD(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 export const daysBetween = (a, b) => Math.round((b - a) / 864e5);
 
-// Post timing for the content calendar.
-// Posted = green, even if it went out late (the delay is kept and shown as "posted N days late").
-// Not posted yet: orange once it's 1 day past its date, red after 2+ days (over 48 hours). "Delayed" is at least orange.
-export const TIMING_LABEL = { ontime: "Posted", late1: "1 day overdue", late2: "Over 48 hours overdue" };
-// Days late: for a posted post, how late it went out; for an unposted one, how far past its date it is now.
-export function postDaysLate(c, todayStr = isoDate(new Date())) {
-  const due = parseISO(c.date);
-  if (!due) return 0;
-  const at = c.status === "Posted" ? parseISO(String(c.postedAt || "").slice(0, 10)) || due : parseISO(todayStr);
-  return Math.max(0, daysBetween(due, at));
+// Post timing for the content calendar (see lib/posts.js for the rules).
+// Green = went live (on time or late; the delay is shown separately). Orange = 1 day overdue or marked Delayed.
+// Red = over 48 hours overdue. Grey = skipped, or moved to another post.
+export const TIMING_LABEL = { ontime: "Posted", late1: "1 day overdue", late2: "Over 48 hours overdue", skip: "Skipped / moved" };
+export function timingOf(d) {
+  if (!d) return "";
+  if (d.state === "ontime" || d.state === "late") return "ontime";
+  if (d.state === "overdue") return d.days === 1 ? "late1" : "late2";
+  if (d.state === "delayed") return "late1";
+  if (d.state === "skipped" || d.state === "moved") return "skip";
+  return "";
 }
-export function postTiming(c, todayStr = isoDate(new Date())) {
-  if (!parseISO(c.date)) return "";
-  if (c.status === "Posted") return "ontime";
-  const n = postDaysLate(c, todayStr);
-  const late = n <= 0 ? "" : n === 1 ? "late1" : "late2";
-  return c.status === "Delayed" ? late || "late1" : late;
-}
-export const lateText = (n) => (n === 1 ? "1 day late" : `${n} days late`);
+export const postTiming = (c, links, byId) => timingOf(delivery(c, links, byId));
+export const postDaysLate = (c, links, byId) => { const d = delivery(c, links, byId); return d.state === "late" || d.state === "overdue" ? d.days : 0; };
+export { lateText, delivery, linkIndex, isPosted, postedDay, isExtra, actualFormat, DELIVERY_LABEL } from "@/lib/posts";
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const fmtShort = (s) => { const d = parseISO(s); return d ? `${d.getDate()} ${MON[d.getMonth()]}` : ""; };
@@ -52,7 +49,7 @@ export function dueInfo(s, done) {
   return { text: fmtShort(s), cls: "" };
 }
 
-export const isOpen = (t) => (t._post ? t.status !== "Posted" : t.status !== "Done");
+export const isOpen = (t) => (t._post ? !isPosted(t._post) && !["Skipped", "Moved"].includes(t._post.status) : t.status !== "Done");
 export const byDeadline = (a, b) => String(a.deadline || "9999").localeCompare(String(b.deadline || "9999"));
 export function sortTickets(mode) {
   return (a, b) => {
@@ -84,8 +81,8 @@ export function output(content, p, ym) {
   const isStatic = (c) => c.format === "Static" || c.format === "Carousel";
   const reels = items.filter((c) => c.format === "Reel"), statics = items.filter(isStatic);
   return {
-    reels: { planned: reels.length, posted: reels.filter((c) => c.status === "Posted").length, target: Number(p.reels) || 0 },
-    statics: { planned: statics.length, posted: statics.filter((c) => c.status === "Posted").length, target: Number(p.statics) || 0 },
+    reels: { planned: reels.length, posted: reels.filter(isPosted).length, target: Number(p.reels) || 0 },
+    statics: { planned: statics.length, posted: statics.filter(isPosted).length, target: Number(p.statics) || 0 },
   };
 }
 
@@ -144,3 +141,4 @@ export const TICKET_TIMING_LABEL = { ontime: "On track / on time", late1: "1 day
 // A content post shown as a row in the Tickets list (deadline = post date).
 export const postAsTicket = (c) => ({ id: "post:" + c.id, _post: c, projectId: c.projectId, title: c.title || `${c.format} post`, priority: "", status: c.status, pocs: c.owners, deadline: c.date, kind: "Content" });
 export const rowTiming = (t) => (t._post ? postTiming(t._post) || "ontime" : ticketTiming(t));
+export const postTitle = (c) => c.title || `${c.format} post`;
