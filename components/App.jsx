@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import { api } from "./util";
 import { ToastHost, Modal, Thinking, useToast } from "./ui";
 import { Overview, LogView, AskView, LedgerView, EntryModal } from "./Finance";
+import { BudgetsView } from "./Budgets";
 import { ProjectsView, ProjectPage } from "./Projects";
 import { ScheduleView, EventModal } from "./Schedule";
 import { PeopleView } from "./People";
@@ -21,6 +22,7 @@ const ic = (d, extra) => <svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const I = {
   work: ic(<><circle cx="12" cy="12" r="2.6" /><ellipse cx="12" cy="12" rx="9.5" ry="4.2" transform="rotate(-24 12 12)" /></>),
   money: ic(<><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></>),
+  budgets: ic(<><circle cx="12" cy="12" r="9" /><path d="M12 3v9l6.4 6.4" /></>),
   ledger: ic(<><path d="M8 6h12M8 12h12M8 18h12" /><circle cx="4" cy="6" r="1" /><circle cx="4" cy="12" r="1" /><circle cx="4" cy="18" r="1" /></>),
   log: ic(<path d="M12 5v14M5 12h14" strokeWidth="2.2" />),
   schedule: ic(<><rect x="3" y="5" width="18" height="16" /><path d="M3 10h18M8 3v4M16 3v4" /></>),
@@ -39,7 +41,7 @@ const I = {
 };
 
 const WORK_NAV = [["work", "Studio"], ["today", "Today"], ["projects", "Projects"], ["tickets", "Tickets"], ["schedule", "Schedule"], ["content", "Content"], ["clients", "Client summary"], ["teamwork", "Team"], ["crew", "Crew & talent"], ["claude", "Connect Claude"]];
-const MONEY_NAV = [["money", "Money"], ["ledger", "Ledger"], ["log", "Log"], ["ask", "Ask the books"], ["team", "Team access"]];
+const MONEY_NAV = [["money", "Money"], ["budgets", "Clients & projects"], ["ledger", "Ledger"], ["log", "Log"], ["ask", "Ask the books"], ["team", "Team access"]];
 const PARTNER_BOTTOM = [["work", "Studio"], ["tickets", "Tickets"], ["log", "Log"], ["today", "Today"], ["more", "More"]];
 const EMPLOYEE_BOTTOM = [["today", "Today"], ["work", "Studio"], ["tickets", "Tickets"], ["content", "Content"], ["more", "More"]];
 const MONEY_VIEWS = new Set(MONEY_NAV.map((x) => x[0]));
@@ -147,6 +149,7 @@ function Shell() {
             {view === "claude" && <ConnectView me={data.me} />}
             {view === "money" && isP && <Overview data={data} openEntry={setEntry} go={(t) => go({ view: t === "projects" ? "projects" : t })} />}
             {view === "ledger" && isP && <LedgerView data={data} openEntry={setEntry} />}
+            {view === "budgets" && isP && <BudgetsView data={data} openEntry={setEntry} />}
             {view === "log" && isP && <LogView data={data} reload={load} />}
             {view === "ask" && isP && <AskView data={data} />}
             {view === "team" && isP && <TeamView data={data} reload={load} />}

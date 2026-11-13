@@ -619,3 +619,33 @@ svg.orbit{display:block;width:100%;height:auto;overflow:visible}
   .ctr>[data-l]::before,.str>[data-l]::before{content:attr(data-l);display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:400}
   .kpis{grid-template-columns:repeat(3,1fr)}
 }
+
+/* Clients & projects (money by client/project) */
+.kpis.bk{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}
+.kpis.bk .kpi b{font-size:20px}
+.kpi.bad b{color:var(--late2)}
+.monthbar.tight{gap:8px;margin:0}
+.btable{border:1px solid var(--line);background:var(--surface);font-size:14px}
+.btr{display:grid;grid-template-columns:minmax(150px,2fr) repeat(6,minmax(0,1fr));gap:8px;align-items:center;padding:10px 12px;border:0;border-bottom:1px solid var(--line);width:100%;background:none;color:var(--ink);font:inherit;text-align:left}
+button.btr{cursor:pointer}
+button.btr:hover{background:var(--sunk)}
+.btr.head{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+.btr.sub.head{margin-top:0;border-top:1px solid var(--line)}
+.btr.client{font-weight:700}
+.btr.proj{font-size:13.5px;padding-left:30px}
+.btr .bname{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+.btr .caret{font-style:normal;color:var(--muted);width:12px}
+.btr .in{color:var(--ontime)}
+.btr.neg .netv{color:var(--late2)}
+.used{display:inline-flex;align-items:center;gap:0}
+.used.warn{color:var(--late1)}.used.over{color:var(--late2);font-weight:700}
+.used.over .meter b{background:var(--late2)}.used.warn .meter b{background:var(--late1)}
+.bentries{border-bottom:1px solid var(--line);background:var(--sunk);padding-left:30px}
+@media (max-width:900px){
+  .kpis.bk{grid-template-columns:repeat(2,1fr)}
+  .btr.head{display:none}
+  .btr{grid-template-columns:repeat(3,1fr)}
+  .btr .bname{grid-column:1/-1}
+  .btr>[data-l]::before{content:attr(data-l);display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:400}
+  .btr>span:empty{display:none}
+}
