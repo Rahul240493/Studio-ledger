@@ -9,6 +9,8 @@ import { EntryRow } from "./Finance";
 // "General" entries are each company's overheads and are listed separately.
 
 const norm = (s) => String(s || "").trim().toLowerCase();
+// "Atom Social", "ATOM SOCIAL LLP" and "Atom Social LLP." are one client.
+const clientKey = (s) => norm(s).replace(/[.,()&]/g, " ").replace(/\b(llp|pvt|private|ltd|limited|inc|co|company|the)\b/g, " ").replace(/\s+/g, " ").trim();
 
 export function clientIndex(ledger, projects) {
   const byName = Object.fromEntries(projects.map((p) => [norm(p.name), p]));
@@ -22,6 +24,7 @@ export function clientIndex(ledger, projects) {
     const p = byName[norm(project)];
     if (p && String(p.client || "").trim()) return String(p.client).trim();
     const pay = payers[norm(project)];
+    // Payer spellings for the same company are merged before picking the main payer.
     if (pay) return Object.entries(pay).sort((a, b) => b[1] - a[1])[0][0];
     return project;
   };
@@ -47,7 +50,9 @@ function rollup(entries, projects, clientOf) {
   });
   const clients = {};
   for (const r of rows.filter((x) => !x.general)) {
-    const c = (clients[r.client] ||= { name: r.client, rows: [], received: 0, pending: 0, spent: 0, owed: 0, budget: 0, segments: new Set() });
+    const ck = clientKey(r.client) || norm(r.client);
+    if (clients[ck] && r.client.length > clients[ck].name.length) clients[ck].name = r.client; // keep the fullest spelling
+    const c = (clients[ck] ||= { name: r.client, rows: [], received: 0, pending: 0, spent: 0, owed: 0, budget: 0, segments: new Set() });
     c.rows.push(r); c.segments.add(r.segment);
     for (const k of ["received", "pending", "spent", "owed", "budget"]) c[k] += r[k];
   }

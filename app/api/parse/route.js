@@ -17,7 +17,16 @@ export const POST = handle(async (req) => {
     const mediaType = file.contentType === "application/pdf" ? "application/pdf" : ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.contentType) ? file.contentType : "image/jpeg";
     filePart = { mediaType, base64: buf.toString("base64") };
   }
-  const projects = await readTab("Projects").catch(() => []);
-  const entries = await parseEntries({ text, projects, file: filePart });
+  const [projects, ledger] = await Promise.all([readTab("Projects").catch(() => []), readTab("Ledger").catch(() => [])]);
+  // Names already used in the books, so spoken/typed variants map to the same project or client.
+  const known = new Set(projects.map((p) => p.name.toLowerCase()));
+  const extra = [];
+  for (const e of ledger) {
+    if (!e.project || e.project === "General" || known.has(e.project.toLowerCase())) continue;
+    known.add(e.project.toLowerCase());
+    extra.push({ name: e.project, segment: e.segment, type: "from the ledger" });
+  }
+  const parties = [...new Set(ledger.filter((e) => e.type === "Income" && e.party).map((e) => e.party))];
+  const entries = await parseEntries({ text, projects: [...projects, ...extra], parties, file: filePart });
   return { entries };
 });
