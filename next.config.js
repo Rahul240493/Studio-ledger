@@ -1,2 +1,2 @@
 /** @type {import('next').NextConfig} */
-module.exports = { reactStrictMode: true, experimental: { serverComponentsExternalPackages: ["googleapis"] } };
+module.exports = { reactStrictMode: true, experimental: { serverComponentsExternalPackages: ["googleapis", "imapflow", "nodemailer", "mailparser", "tsdav"] } };

@@ -1,6 +1,6 @@
 "use client";
 // Whiskey: the partners' studio voice assistant. Talk or type; it answers out loud.
-// Money entries and deletions come back as cards to confirm.
+// Money entries, emails, Titan calendar events and deletions come back as cards to confirm.
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./util";
 import { useToast } from "./ui";
@@ -73,10 +73,37 @@ function ActionCard({ a, onDone }) {
       {a.body && <pre className="wcard-body">{a.body}</pre>}
       {state === "done" ? <div className="wcard-s ok">Done</div> : state === "cancelled" ? <div className="wcard-s">Cancelled</div> : (
         <div className="row">
-          <button className={`btn ${a.danger ? "danger" : "primary"}`} disabled={state === "busy"} onClick={confirm}>{state === "busy" ? "Working…" : a.kind === "delete" ? "Delete" : "Confirm"}</button>
+          <button className={`btn ${a.danger ? "danger" : "primary"}`} disabled={state === "busy"} onClick={confirm}>{state === "busy" ? "Working…" : a.kind === "email" ? "Send" : a.kind === "delete" ? "Delete" : "Confirm"}</button>
           <button className="btn ghost" disabled={state === "busy"} onClick={() => { setState("cancelled"); onDone(a, "cancelled"); }}>Cancel</button>
         </div>
       )}
+    </div>
+  );
+}
+
+function Connections() {
+  const [c, setC] = useState(null), [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  useEffect(() => { api("/api/whiskey/connections").then(setC).catch((e) => setErr(e.message)); }, []);
+  async function test() { setBusy(true); setErr(""); try { setC(await api("/api/whiskey/connections", { method: "POST" })); } catch (e) { setErr(e.message); } setBusy(false); }
+  const chk = (m) => c?.checks?.find((x) => x.mailbox === m.name);
+  const okc = (v) => (/^OK/.test(v || "") ? "ok" : "bad");
+  return (
+    <div className="wset-block">
+      <div className="flabel">Mail & calendars</div>
+      {err && <p className="hint bad">{err}</p>}
+      {!c ? !err && <span className="hint">Checking…</span> : (
+        <ul className="wconn">
+          {c.mailboxes.map((m) => (
+            <li key={m.key}>
+              <b>{m.name} mail & calendar (Titan)</b>
+              {m.email ? <span className="hint">{m.email}</span> : <span className="hint">Not set up. Add <code>{m.env}_EMAIL</code> and <code>{m.env}_PASSWORD</code> in Vercel.</span>}
+              {chk(m) && ["mail", "sending", "calendar"].map((k) => chk(m)[k] && <span key={k} className={`wchk ${okc(chk(m)[k])}`}>{k === "mail" ? "Reading" : k === "sending" ? "Sending" : "Calendar"}: {chk(m)[k]}</span>)}
+            </li>
+          ))}
+          <li><b>Studio Google Calendar</b><span className="hint">{c.studioCalendar ? "Connected (the dashboard schedule)" : "Not set up"}</span>{c.studio && <span className={`wchk ${okc(c.studio)}`}>{c.studio}</span>}</li>
+        </ul>
+      )}
+      <button className="btn ghost" onClick={test} disabled={busy}>{busy ? "Testing…" : "Test connections"}</button>
     </div>
   );
 }
@@ -88,6 +115,7 @@ function Settings({ prefs, setPrefs, onClose }) {
   return (
     <div className="wsettings">
       <div className="row spread"><b>Whiskey settings</b><button className="btn ghost" onClick={onClose}>Done</button></div>
+      <Connections />
       <div className="wset-block">
         <label className="check"><input type="checkbox" checked={prefs.speak} onChange={(e) => setPrefs({ ...prefs, speak: e.target.checked })} /> Speak replies out loud</label>
         <label className="check"><input type="checkbox" checked={prefs.handsFree} onChange={(e) => setPrefs({ ...prefs, handsFree: e.target.checked })} /> Hands-free: keep listening after each reply (say "stop" to end)</label>
@@ -201,7 +229,7 @@ export function Whiskey() {
   };
 
   const brief = () => send("Good morning Whiskey, brief me on today.");
-  const SUGGEST = ["Brief me on today", "How much did we spend this month?", "Which client posts are overdue?", "Who hasn't checked in today?", "What's still to receive from clients?"];
+  const SUGGEST = ["Brief me on today", "How much did we spend this month?", "Which client posts are overdue?", "Who hasn't checked in today?", "Any important emails today?", "What's on the calendars this week?"];
 
   return (
     <>
