@@ -5,6 +5,7 @@ import { api } from "./util";
 import { ToastHost, Modal, Thinking, useToast } from "./ui";
 import { Overview, LogView, AskView, LedgerView, EntryModal } from "./Finance";
 import { BudgetsView } from "./Budgets";
+import { Whiskey } from "./Whiskey";
 import { ProjectsView, ProjectPage } from "./Projects";
 import { ScheduleView, EventModal } from "./Schedule";
 import { PeopleView } from "./People";
@@ -122,6 +123,7 @@ function Shell() {
           <div className="side-foot"><span className="hint">{data.me.email}</span><button className="btn ghost" onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button></div>
         </aside>
 
+        {isP && <Whiskey />}
         <div className="main-col">
           <header className="top"><div className="wrap">
             <div className="top-brand row-brand"><div className="logos top-logos" aria-label="The Madking Studios and Space & Gravity"><img src="/logos/mk-logo.png" alt="The Madking Studios" /><span className="logo-sep" aria-hidden="true" /><img src="/logos/sg-logo.png" alt="Space & Gravity" /></div><div className="brand">Studio Ledger<small>{isP ? "Partner" : "Team"}</small></div></div>

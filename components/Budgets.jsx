@@ -1,64 +1,14 @@
 "use client";
 import { Fragment, useMemo, useState } from "react";
-import { SEGMENTS, TAX_CAT } from "@/lib/config";
+import { SEGMENTS } from "@/lib/config";
+import { clientIndex, rollup, norm } from "@/lib/moneyRollup";
+export { clientIndex };
 import { rs, ym, monthLabel, shiftMonth, segOf } from "./util";
 import { EntryRow } from "./Finance";
 
 // Money by client and by project (partners only).
 // Client = the project's Client field; if that's empty, whoever paid us for it most often; else the project name.
 // "General" entries are each company's overheads and are listed separately.
-
-const norm = (s) => String(s || "").trim().toLowerCase();
-// "Atom Social", "ATOM SOCIAL LLP" and "Atom Social LLP." are one client.
-const clientKey = (s) => norm(s).replace(/[.,()&]/g, " ").replace(/\b(llp|pvt|private|ltd|limited|inc|co|company|the)\b/g, " ").replace(/\s+/g, " ").trim();
-
-export function clientIndex(ledger, projects) {
-  const byName = Object.fromEntries(projects.map((p) => [norm(p.name), p]));
-  const payers = {};
-  for (const e of ledger) {
-    if (e.type !== "Income" || !e.project || e.project === "General" || !e.party) continue;
-    const k = norm(e.project);
-    (payers[k] ||= {})[e.party] = (payers[k][e.party] || 0) + (Number(e.amount) || 0);
-  }
-  return (project) => {
-    const p = byName[norm(project)];
-    if (p && String(p.client || "").trim()) return String(p.client).trim();
-    const pay = payers[norm(project)];
-    // Payer spellings for the same company are merged before picking the main payer.
-    if (pay) return Object.entries(pay).sort((a, b) => b[1] - a[1])[0][0];
-    return project;
-  };
-}
-
-function rollup(entries, projects, clientOf) {
-  const byName = Object.fromEntries(projects.map((p) => [norm(p.name), p]));
-  const proj = {};
-  for (const e of entries) {
-    const general = !e.project || e.project === "General";
-    const key = general ? `__${e.segment}` : `${e.segment}|${norm(e.project)}`;
-    const r = (proj[key] ||= { key, general, segment: e.segment, name: general ? `${segOf(e.segment).short || e.segment} overheads` : e.project, entries: [], received: 0, pending: 0, spent: 0, owed: 0, tax: 0 });
-    r.entries.push(e);
-    const amt = Number(e.amount) || 0;
-    if (e.type === "Income") { if (e.status === "Pending") r.pending += amt; else r.received += amt; }
-    else if (e.category === TAX_CAT) r.tax += Number(e.total) || amt;
-    else { r.spent += amt; if (e.status === "Payable") r.owed += amt; }
-  }
-  const rows = Object.values(proj).map((r) => {
-    const p = r.general ? null : byName[norm(r.name)];
-    const budget = Number(p?.budget) || 0;
-    return { ...r, project: p, budget, client: r.general ? "Overheads" : clientOf(r.name), net: r.received - r.spent };
-  });
-  const clients = {};
-  for (const r of rows.filter((x) => !x.general)) {
-    const ck = clientKey(r.client) || norm(r.client);
-    if (clients[ck] && r.client.length > clients[ck].name.length) clients[ck].name = r.client; // keep the fullest spelling
-    const c = (clients[ck] ||= { name: r.client, rows: [], received: 0, pending: 0, spent: 0, owed: 0, budget: 0, segments: new Set() });
-    c.rows.push(r); c.segments.add(r.segment);
-    for (const k of ["received", "pending", "spent", "owed", "budget"]) c[k] += r[k];
-  }
-  const list = Object.values(clients).map((c) => ({ ...c, net: c.received - c.spent }));
-  return { clients: list, overheads: rows.filter((x) => x.general) };
-}
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : null);
 const SORTS = [["net", "Net"], ["received", "Money in"], ["spent", "Money out"], ["name", "Name"]];

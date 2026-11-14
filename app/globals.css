@@ -649,3 +649,49 @@ button.btr:hover{background:var(--sunk)}
   .btr>[data-l]::before{content:attr(data-l);display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:400}
   .btr>span:empty{display:none}
 }
+
+/* ---------- Whiskey (partners' voice assistant) ---------- */
+.whiskey-fab{position:fixed;right:18px;bottom:22px;z-index:30;width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:0 8px 28px rgba(0,0,0,.45);cursor:pointer}
+.whiskey-fab svg{width:26px;height:26px}
+.whiskey-fab.wake::after{content:"";position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--ontime);border:2px solid var(--bg)}
+.whiskey-fab.live{animation:wpulse 1.2s infinite}
+@keyframes wpulse{0%{box-shadow:0 0 0 0 rgba(255,74,61,.55)}70%{box-shadow:0 0 0 16px rgba(255,74,61,0)}100%{box-shadow:0 0 0 0 rgba(255,74,61,0)}}
+.whiskey{position:fixed;right:18px;bottom:90px;z-index:31;width:min(420px,calc(100vw - 24px));height:min(640px,calc(100vh - 120px));background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;box-shadow:0 18px 60px rgba(0,0,0,.6)}
+.wh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.wh-t{display:flex;align-items:center;gap:10px}.wh-t small{display:block;color:var(--muted);font-size:11.5px}
+.wh .iconbtn{width:34px;height:34px;font-size:15px}
+.wbody{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px}
+.wempty p{color:var(--muted);font-size:14px;margin:0 0 10px}
+.wmsg{max-width:88%;padding:9px 12px;font-size:14.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.wmsg.user{align-self:flex-end;background:var(--ink);color:var(--bg)}
+.wmsg.assistant{align-self:flex-start;background:var(--sunk);border:1px solid var(--line);white-space:normal}
+.wmsg.assistant p{margin:0 0 6px}.wmsg.assistant p:last-child{margin:0}
+.wmsg.assistant ul{margin:4px 0 6px;padding-left:18px}
+.wmsg.err{border-color:var(--late2)}
+.wmsg a{color:inherit;text-decoration:underline}
+.wtable{overflow-x:auto;margin:4px 0}.wtable table{border-collapse:collapse;font-size:12.5px}
+.wtable th,.wtable td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}.wtable th{color:var(--muted);font-weight:600}
+.wmsg.typing{display:flex;gap:5px}.wmsg.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:wdot 1s infinite}
+.wmsg.typing i:nth-child(2){animation-delay:.15s}.wmsg.typing i:nth-child(3){animation-delay:.3s}
+@keyframes wdot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.wcard{align-self:stretch;border:1px solid var(--ink2);padding:10px 12px;display:flex;flex-direction:column;gap:5px;font-size:13.5px}
+.wcard.danger{border-color:var(--late2)}
+.wcard-h{font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.wcard-l{color:var(--ink2)}
+.wcard-body{white-space:pre-wrap;font:inherit;font-size:13px;background:var(--sunk);padding:8px;margin:2px 0;max-height:200px;overflow:auto}
+.wcard-s{color:var(--muted);font-size:12.5px}.wcard-s.ok{color:var(--ontime);font-weight:700}
+.wcard.done,.wcard.cancelled{opacity:.7}
+.wf{border-top:1px solid var(--line);padding:8px 10px 10px;display:flex;flex-direction:column;gap:8px}
+.wf .btn.ghost{padding:5px 10px;font-size:11px}
+.wform{display:flex;gap:6px;align-items:center}
+.wform input{flex:1;min-width:0}
+.wmic{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--sunk);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.wmic.on{background:var(--late2);border-color:var(--late2);color:#fff;animation:wpulse 1.2s infinite}
+.wsettings{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:14px}
+.wset-block{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.wset-block.grid2{display:grid;grid-template-columns:1fr 110px;gap:8px}
+.wset-block .check{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+@media (max-width:959px){
+  .whiskey-fab{bottom:calc(78px + env(safe-area-inset-bottom,0px));right:14px;width:52px;height:52px}
+  .whiskey{inset:auto 0 0 0;width:100%;height:min(88vh,calc(100vh - 40px));border-left:0;border-right:0;z-index:40}
+}
