@@ -1,6 +1,6 @@
 "use client";
 // Whiskey: the partners' studio voice assistant. Talk or type; it answers out loud.
-// Money entries, emails, invites and deletions come back as cards to confirm.
+// Money entries and deletions come back as cards to confirm.
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./util";
 import { useToast } from "./ui";
@@ -73,7 +73,7 @@ function ActionCard({ a, onDone }) {
       {a.body && <pre className="wcard-body">{a.body}</pre>}
       {state === "done" ? <div className="wcard-s ok">Done</div> : state === "cancelled" ? <div className="wcard-s">Cancelled</div> : (
         <div className="row">
-          <button className={`btn ${a.danger ? "danger" : "primary"}`} disabled={state === "busy"} onClick={confirm}>{state === "busy" ? "Working…" : a.kind === "email" ? "Send" : a.kind === "delete" ? "Delete" : "Confirm"}</button>
+          <button className={`btn ${a.danger ? "danger" : "primary"}`} disabled={state === "busy"} onClick={confirm}>{state === "busy" ? "Working…" : a.kind === "delete" ? "Delete" : "Confirm"}</button>
           <button className="btn ghost" disabled={state === "busy"} onClick={() => { setState("cancelled"); onDone(a, "cancelled"); }}>Cancel</button>
         </div>
       )}
@@ -83,24 +83,11 @@ function ActionCard({ a, onDone }) {
 
 function Settings({ prefs, setPrefs, onClose }) {
   const toast = useToast();
-  const [g, setG] = useState(null);
   const [voices, setVoices] = useState([]);
-  useEffect(() => { api("/api/whiskey/google").then(setG).catch((e) => setG({ error: e.message })); }, []);
   useEffect(() => { const f = () => setVoices((window.speechSynthesis?.getVoices?.() || []).filter((v) => /^en|^hi|^te/i.test(v.lang))); f(); window.speechSynthesis?.addEventListener?.("voiceschanged", f); return () => window.speechSynthesis?.removeEventListener?.("voiceschanged", f); }, []);
-  async function disconnect() { try { await api("/api/whiskey/google", { method: "DELETE" }); setG({ connected: false }); toast("Company Google account disconnected"); } catch (e) { toast(e.message); } }
   return (
     <div className="wsettings">
       <div className="row spread"><b>Whiskey settings</b><button className="btn ghost" onClick={onClose}>Done</button></div>
-      <div className="wset-block">
-        <div className="flabel">Company Google account (Gmail, Calendar, Drive)</div>
-        {!g ? <span className="hint">Checking…</span> : g.connected ? (
-          <><p className="hint">Connected as <b>{g.email}</b>{g.connectedBy ? ` by ${g.connectedBy}` : ""}. All partners' Whiskey uses this account.</p>
-            <div className="row"><a className="btn" href="/api/whiskey/google/connect">Reconnect</a><button className="btn ghost" onClick={disconnect}>Disconnect</button></div></>
-        ) : (
-          <><p className="hint">Not connected. Sign in with the company Google account once and every partner's Whiskey can read mail, the calendar and Drive. Sending email or invites always needs your tap.</p>
-            <a className="btn primary" href="/api/whiskey/google/connect">Connect company Google</a></>
-        )}
-      </div>
       <div className="wset-block">
         <label className="check"><input type="checkbox" checked={prefs.speak} onChange={(e) => setPrefs({ ...prefs, speak: e.target.checked })} /> Speak replies out loud</label>
         <label className="check"><input type="checkbox" checked={prefs.handsFree} onChange={(e) => setPrefs({ ...prefs, handsFree: e.target.checked })} /> Hands-free: keep listening after each reply (say "stop" to end)</label>
@@ -134,14 +121,6 @@ export function Whiskey() {
   useEffect(() => { save(STORE, msgs.slice(-60)); }, [msgs]);
   const setPrefs = (p) => { setPrefsState(p); save(PREFS, p); };
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs, busy, open]);
-  // Back from connecting the Google account.
-  useEffect(() => {
-    const u = new URL(window.location.href); const w = u.searchParams.get("whiskey");
-    if (!w) return;
-    setOpen(true); setShowSet(true);
-    toast(w === "connected" ? "Company Google account connected" : u.searchParams.get("msg") || "Couldn't connect Google");
-    u.searchParams.delete("whiskey"); u.searchParams.delete("msg"); window.history.replaceState(null, "", u.pathname + (u.search || ""));
-  }, [toast]);
 
   const stopSpeaking = () => { try { window.speechSynthesis?.cancel(); } catch {} setSpeaking(false); };
   const say = useCallback((md, after) => {
@@ -222,7 +201,7 @@ export function Whiskey() {
   };
 
   const brief = () => send("Good morning Whiskey, brief me on today.");
-  const SUGGEST = ["Brief me on today", "How much did we spend this month?", "Which client posts are overdue?", "Who hasn't checked in today?", "Any important emails today?"];
+  const SUGGEST = ["Brief me on today", "How much did we spend this month?", "Which client posts are overdue?", "Who hasn't checked in today?", "What's still to receive from clients?"];
 
   return (
     <>

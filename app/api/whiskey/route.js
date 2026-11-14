@@ -1,10 +1,10 @@
-// Whiskey: the partners' studio voice assistant. Claude with tools over work, money and the company Google account.
+// Whiskey: the partners' studio voice assistant. Claude with tools over work and money.
 import "@/lib/settings";
 import { requirePartner, handle } from "@/lib/access";
 import { client, MODEL } from "@/lib/claude";
 import { readTabs } from "@/lib/google";
 import { TOOLS, runTool, prepareAction, CONFIRM_TOOLS } from "@/lib/whiskey/tools";
-import { sign, loadAccount, friendlyGoogleError } from "@/lib/whiskey/gaccount";
+import { sign } from "@/lib/whiskey/ticket";
 import { istParts } from "@/lib/ist";
 
 export const maxDuration = 60;
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const CACHED_TOOLS = TOOLS.map((t, i) => (i === TOOLS.length - 1 ? { ...t, cache_control: { type: "ephemeral" } } : t));
 
-function systemPrompt({ me, team, projects, google }) {
+function systemPrompt({ me, team, projects }) {
   const now = istParts();
   return `You are Whiskey, the in-house voice assistant of The Madking Studios and Space & Gravity Studios (Hyderabad). You work for the five partners only, and you are talking with ${me.name} (${me.email}), a partner.
 Madking Studios makes films, short films, music videos and OTT content. Space & Gravity makes ad films, brand films, documentaries, digital marketing and AI content. "Office" is the shared office both companies pay for.
@@ -20,13 +20,13 @@ Partners: Rahul Chinthala (Head of Production & Operations), Harshith Potluri (C
 Team: ${team.map((t) => `${t.name}${t.title ? " (" + t.title + ")" : ""}`).join(", ") || "none listed"}.
 Live projects: ${projects.filter((p) => !["Delivered", "Lost"].includes(p.pipeline)).map((p) => `${p.name} [${p.segment === "Madking Studios" ? "Madking" : p.segment === "Space & Gravity" ? "S&G" : p.segment}${p.client ? ", client " + p.client : ""}]`).join("; ") || "none"}.
 Now: ${now.date} ${now.time} IST. Indian financial year runs 1 April to 31 March.
-Company Google account (Gmail, Calendar, Drive): ${google ? "connected as " + google : "NOT connected yet; if asked for email/calendar/drive, say a partner can connect it from the gear in the Whiskey panel"}.
+You have no access to email, Google Calendar invites or Google Drive; if asked, say so briefly and offer what you can do in the dashboard.
 
 How to behave:
 - Your replies are read aloud. Default to 1–3 short spoken sentences. Lead with the answer. Only use a short list or table when they ask for detail or a breakdown; it will be shown on screen.
 - Never guess numbers, dates, names or statuses: look them up with tools. If a tool fails, say what failed in one sentence.
 - Money: say amounts the Indian way (₹2.4 lakh, ₹45,000, ₹1.2 crore). Ledger amounts are before GST. Mention which company when it matters.
-- Things that change the books, send email, invite people or delete anything are only proposed: call the propose_* tool, then tell the partner in one sentence what is on the card and to tap Confirm. Never say it's done until they confirm.
+- Things that change the books or delete anything are only proposed: call the propose_* tool, then tell the partner in one sentence what is on the card and to tap Confirm. Never say it's done until they confirm.
 - Tickets, content posts, project briefs, updates and the studio schedule you may change directly when asked; then confirm in one sentence what you did.
 - If something is ambiguous (which project, which client, which person), ask one short question rather than guessing.
 - Speak like a sharp, warm studio producer. No filler, no "As an AI". Reply in the language they use (English, Hindi or Telugu); keep names and numbers clear.
@@ -42,8 +42,8 @@ export const POST = handle(async (req) => {
   while (history.length && history[0].role !== "user") history.shift();
   if (!history.length) return Response.json({ error: "Say something to Whiskey." }, { status: 400 });
 
-  const [d, acct] = await Promise.all([readTabs(["Team", "Projects"]), loadAccount().catch(() => null)]);
-  const system = [{ type: "text", text: systemPrompt({ me, team: (d.Team || []).filter((t) => t.role !== "Partner"), projects: d.Projects || [], google: acct?.email }), cache_control: { type: "ephemeral" } }];
+  const d = await readTabs(["Team", "Projects"]);
+  const system = [{ type: "text", text: systemPrompt({ me, team: (d.Team || []).filter((t) => t.role !== "Partner"), projects: d.Projects || [] }), cache_control: { type: "ephemeral" } }];
   const user = { email: me.email, name: me.name };
   const convo = [...history];
   const actions = [], used = [];
@@ -66,7 +66,7 @@ export const POST = handle(async (req) => {
         const out = await runTool(user, c.name, c.input || {});
         return { type: "tool_result", tool_use_id: c.id, content: asText(out) };
       } catch (e) {
-        const msg = friendlyGoogleError(e) || e.message || "That didn't work.";
+        const msg = e.message || "That didn't work.";
         if (!e.status) console.error("Whiskey tool error", c.name, e);
         return { type: "tool_result", tool_use_id: c.id, content: msg, is_error: true };
       }
